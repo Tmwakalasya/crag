@@ -4,7 +4,7 @@
 
 ## Status
 
-This repository currently contains Phase 1 through Phase 3 work from the technical specification:
+This repository currently contains Phase 1 through Phase 4 work from the technical specification:
 
 - dependency definitions in `requirements.txt`
 - a Typer-based CLI scaffold in `code_rag/main.py`
@@ -14,8 +14,9 @@ This repository currently contains Phase 1 through Phase 3 work from the technic
 - a tree-sitter-backed Python parser in `code_rag/parser/py_parser.py`
 - a repository crawler in `code_rag/indexer/crawler.py`
 - local ChromaDB persistence helpers in `code_rag/indexer/db.py`
-- standalone tests for the parser, crawler, and DB helpers in `tests/`
-- a package skeleton for the retriever module
+- retrieval search helpers in `code_rag/retriever/search.py`
+- answer-generation helpers in `code_rag/retriever/generator.py`
+- standalone tests for the parser, crawler, DB, search, and generator helpers in `tests/`
 
 ## Quick start
 
@@ -25,6 +26,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m code_rag.main ingest .
+python -m code_rag.main ask "Where is the CLI entry point defined?"
 python -m unittest discover -s tests -v
 ```
 
@@ -33,4 +35,4 @@ python -m unittest discover -s tests -v
 - `crag ingest DIRECTORY_PATH`
 - `crag ask QUERY_STRING`
 
-`crag ingest` is now wired to crawl Python files, parse them into logical chunks, and persist them into a local ChromaDB collection. `crag ask` remains scheduled for the retrieval/generation phase.
+`crag ingest` crawls Python files, parses them into logical chunks, and persists them into a local ChromaDB collection. `crag ask` now retrieves the most relevant chunks and generates an answer with Gemini, Ollama, or a grounded local fallback summary when no provider is configured.

@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .config import db_path
+from .config import db_path, default_top_k
 
 app = typer.Typer(
     add_completion=False,
@@ -48,19 +48,29 @@ def ingest(directory_path: Path) -> None:
 
 
 @app.command()
-def ask(query_string: str) -> None:
+def ask(query_string: str, top_k: int = typer.Option(default_top_k(), min=1)) -> None:
     """Ask an architecture question grounded in indexed code chunks."""
-    console.print(
-        Panel.fit(
-            (
-                "[bold yellow]Phase 4 pending[/bold yellow]\n"
-                f"Ask is not implemented yet. Query received: [cyan]{query_string}[/cyan]\n"
-                f"Configured database path: [cyan]{db_path()}[/cyan]"
-            ),
-            title="crag ask",
+    from .retriever.generator import answer_query
+
+    result = answer_query(query_string, top_k=top_k)
+
+    references = Table(title="Referenced chunks")
+    references.add_column("File")
+    references.add_column("Lines")
+    references.add_column("Type")
+    references.add_column("Name")
+
+    for chunk in result.referenced_chunks:
+        references.add_row(
+            chunk.file_path,
+            f"{chunk.start_line}-{chunk.end_line}",
+            chunk.chunk_type,
+            chunk.name,
         )
-    )
-    raise typer.Exit(code=1)
+
+    console.print(Panel.fit(result.answer, title="crag ask"))
+    if result.referenced_chunks:
+        console.print(references)
 
 
 if __name__ == "__main__":
