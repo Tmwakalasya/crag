@@ -4,13 +4,16 @@
 
 ## Status
 
-This repository currently contains the Phase 1 foundation work from the technical specification:
+This repository currently contains Phase 1 and Phase 2 foundation work from the technical specification:
 
 - dependency definitions in `requirements.txt`
 - a Typer-based CLI scaffold in `code_rag/main.py`
 - configuration helpers in `code_rag/config.py`
 - shared Pydantic models in `code_rag/models.py`
-- package skeletons for the parser, indexer, and retriever modules
+- a parser engine in `code_rag/parser/engine.py`
+- a tree-sitter-backed Python parser in `code_rag/parser/py_parser.py`
+- a standalone parser test in `tests/test_py_parser.py`
+- package skeletons for the indexer and retriever modules
 
 ## Quick start
 
@@ -20,6 +23,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m code_rag.main --help
+python -m unittest discover -s tests -v
 ```
 
 ## Planned commands
@@ -27,4 +31,4 @@ python -m code_rag.main --help
 - `crag ingest DIRECTORY_PATH`
 - `crag ask QUERY_STRING`
 
-Both commands are wired as CLI entry points today and intentionally raise a helpful message until the later phases are implemented.
+The CLI commands are wired as entry points today. The parser implementation now exists for Python files, while the indexing and retrieval flows are still scheduled for later phases.
