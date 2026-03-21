@@ -1,0 +1,90 @@
+"""ChromaDB persistence helpers for code-rag."""
+
+from __future__ import annotations
+
+import hashlib
+import importlib
+import math
+import re
+
+from ..config import collection_name, db_path
+from ..models import CodeChunk
+
+_EMBEDDING_DIMENSION = 256
+_TOKEN_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+class LocalHashEmbeddingFunction:
+    """A deterministic local embedding function that avoids network downloads."""
+
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        return [self._embed_document(document) for document in input]
+
+    def _embed_document(self, document: str) -> list[float]:
+        vector = [0.0] * _EMBEDDING_DIMENSION
+        for token in _TOKEN_PATTERN.findall(document.lower()):
+            digest = hashlib.sha1(token.encode("utf-8")).digest()
+            index = int.from_bytes(digest[:4], "big") % _EMBEDDING_DIMENSION
+            sign = 1.0 if digest[4] % 2 == 0 else -1.0
+            vector[index] += sign
+
+        magnitude = math.sqrt(sum(value * value for value in vector))
+        if magnitude == 0:
+            return vector
+        return [value / magnitude for value in vector]
+
+
+def get_client():
+    """Create a persistent local ChromaDB client."""
+    chromadb = importlib.import_module("chromadb")
+    storage_path = db_path()
+    storage_path.mkdir(parents=True, exist_ok=True)
+    return chromadb.PersistentClient(path=str(storage_path))
+
+
+def get_collection(client=None):
+    """Return the code chunk collection, creating it if necessary."""
+    client = client or get_client()
+    return client.get_or_create_collection(
+        name=collection_name(),
+        embedding_function=LocalHashEmbeddingFunction(),
+    )
+
+
+def chunk_id(chunk: CodeChunk) -> str:
+    """Build a stable identifier for a code chunk."""
+    raw_identifier = (
+        f"{chunk.file_path}:{chunk.chunk_type}:{chunk.name}:{chunk.start_line}:{chunk.end_line}"
+    )
+    return hashlib.sha1(raw_identifier.encode("utf-8")).hexdigest()
+
+
+def chunk_to_metadata(chunk: CodeChunk) -> dict[str, str | int]:
+    """Convert a code chunk into ChromaDB metadata."""
+    metadata: dict[str, str | int] = {
+        "file_path": chunk.file_path,
+        "language": chunk.language,
+        "chunk_type": chunk.chunk_type,
+        "name": chunk.name,
+        "start_line": chunk.start_line,
+        "end_line": chunk.end_line,
+    }
+    if chunk.docstring:
+        metadata["docstring"] = chunk.docstring
+    return metadata
+
+
+def ingest_chunks(chunks: list[CodeChunk]) -> int:
+    """Persist code chunks into the local ChromaDB collection."""
+    if not chunks:
+        return 0
+
+    collection = get_collection()
+    payload = {
+        "ids": [chunk_id(chunk) for chunk in chunks],
+        "documents": [chunk.source_code for chunk in chunks],
+        "metadatas": [chunk_to_metadata(chunk) for chunk in chunks],
+    }
+
+    collection.upsert(**payload)
+    return len(chunks)
