@@ -85,13 +85,21 @@ _DEFINITION_NODE_TYPES = {"function_definition", "async_function_definition", "c
 
 
 def _build_python_parser():
-    try:
-        from tree_sitter import Language, Parser
-        import tree_sitter_python
-    except ImportError as error:
+    import importlib
+    import importlib.util
+
+    if (
+        importlib.util.find_spec("tree_sitter") is None
+        or importlib.util.find_spec("tree_sitter_python") is None
+    ):
         raise RuntimeError(
             "tree-sitter and tree-sitter-python are required to parse Python source"
-        ) from error
+        )
+
+    tree_sitter = importlib.import_module("tree_sitter")
+    tree_sitter_python = importlib.import_module("tree_sitter_python")
+    Language = tree_sitter.Language
+    Parser = tree_sitter.Parser
 
     language_factory = getattr(tree_sitter_python, "language", None)
     if language_factory is None:

@@ -4,7 +4,7 @@
 
 ## Status
 
-This repository currently contains Phase 1 and Phase 2 foundation work from the technical specification:
+This repository currently contains Phase 1 through Phase 3 work from the technical specification:
 
 - dependency definitions in `requirements.txt`
 - a Typer-based CLI scaffold in `code_rag/main.py`
@@ -12,8 +12,10 @@ This repository currently contains Phase 1 and Phase 2 foundation work from the 
 - shared Pydantic models in `code_rag/models.py`
 - a parser engine in `code_rag/parser/engine.py`
 - a tree-sitter-backed Python parser in `code_rag/parser/py_parser.py`
-- a standalone parser test in `tests/test_py_parser.py`
-- package skeletons for the indexer and retriever modules
+- a repository crawler in `code_rag/indexer/crawler.py`
+- local ChromaDB persistence helpers in `code_rag/indexer/db.py`
+- standalone tests for the parser, crawler, and DB helpers in `tests/`
+- a package skeleton for the retriever module
 
 ## Quick start
 
@@ -22,7 +24,7 @@ cd code_rag
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m code_rag.main --help
+python -m code_rag.main ingest .
 python -m unittest discover -s tests -v
 ```
 
@@ -31,4 +33,4 @@ python -m unittest discover -s tests -v
 - `crag ingest DIRECTORY_PATH`
 - `crag ask QUERY_STRING`
 
-The CLI commands are wired as entry points today. The parser implementation now exists for Python files, while the indexing and retrieval flows are still scheduled for later phases.
+`crag ingest` is now wired to crawl Python files, parse them into logical chunks, and persist them into a local ChromaDB collection. `crag ask` remains scheduled for the retrieval/generation phase.
