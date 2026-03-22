@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import importlib.util
 import math
 import unittest
 
-from code_rag.code_rag.indexer.db import LocalHashEmbeddingFunction, chunk_id, chunk_to_metadata
-from code_rag.code_rag.models import CodeChunk
+DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
+
+if DEPS_AVAILABLE:
+    from code_rag.code_rag.indexer.db import LocalHashEmbeddingFunction, chunk_id, chunk_to_metadata
+    from code_rag.code_rag.models import CodeChunk
 
 
+@unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
 class DatabaseHelperTest(unittest.TestCase):
     def test_chunk_to_metadata_and_chunk_id_are_stable(self) -> None:
         chunk = CodeChunk(

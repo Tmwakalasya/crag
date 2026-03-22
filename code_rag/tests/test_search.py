@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import importlib.util
 import unittest
 from unittest.mock import patch
 
-from code_rag.code_rag.retriever.search import search_code_chunks
+DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
+
+if DEPS_AVAILABLE:
+    from code_rag.code_rag.retriever.search import search_code_chunks
 
 
+@unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
 class SearchTest(unittest.TestCase):
     def test_search_code_chunks_reconstructs_models_from_collection_results(self) -> None:
         fake_results = {

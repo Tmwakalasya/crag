@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
 
-from code_rag.code_rag.indexer.crawler import iter_source_files
+DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
+
+if DEPS_AVAILABLE:
+    from code_rag.code_rag.indexer.crawler import iter_source_files
 
 
+@unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
 class CrawlerTest(unittest.TestCase):
     def test_iter_source_files_ignores_special_directories_and_binary_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
