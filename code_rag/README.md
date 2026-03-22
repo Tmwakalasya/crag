@@ -274,7 +274,10 @@ cd code_rag
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
+
+Installing the project in editable mode exposes the `crag` command as a real console entry point instead of requiring only `python -m ...` invocation.
 
 ### Optional provider setup
 
@@ -324,14 +327,22 @@ The following environment variables are supported.
 
 ### Ingest a repository
 
+Preferred installed entry point:
+
 ```bash
-python -m code_rag.main ingest /path/to/repository
+crag ingest /path/to/repository
+```
+
+Module form also works:
+
+```bash
+python -m code_rag ingest /path/to/repository
 ```
 
 Example:
 
 ```bash
-python -m code_rag.main ingest .
+crag ingest .
 ```
 
 Expected behavior:
@@ -344,14 +355,22 @@ Expected behavior:
 
 ### Ask a question
 
+Preferred installed entry point:
+
 ```bash
-python -m code_rag.main ask "Where is the CLI entry point defined?"
+crag ask "Where is the CLI entry point defined?"
+```
+
+Module form also works:
+
+```bash
+python -m code_rag ask "Where is the CLI entry point defined?"
 ```
 
 You can also override retrieval depth:
 
 ```bash
-python -m code_rag.main ask "How does ingestion work?" --top-k 8
+crag ask "How does ingestion work?" --top-k 8
 ```
 
 Expected behavior:
@@ -373,9 +392,9 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m code_rag.main ingest .
-python -m code_rag.main ask "Where is repository crawling implemented?"
-python -m code_rag.main ask "How are chunks stored in the database?"
+crag ingest .
+crag ask "Where is repository crawling implemented?"
+crag ask "How are chunks stored in the database?"
 ```
 
 If you later change the codebase significantly, re-run ingestion to refresh the indexed collection.
@@ -387,7 +406,7 @@ If you later change the codebase significantly, re-run ingestion to refresh the 
 When you run:
 
 ```bash
-python -m code_rag.main ingest SOME_DIRECTORY
+crag ingest SOME_DIRECTORY
 ```
 
 this happens internally:
@@ -425,7 +444,7 @@ By default, Chroma may try to use an embedding path that requires downloading a 
 When you run:
 
 ```bash
-python -m code_rag.main ask "How does the parser work?"
+crag ask "How does the parser work?"
 ```
 
 this happens internally:
@@ -608,6 +627,7 @@ Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Run tests:
@@ -619,13 +639,13 @@ python -m unittest discover -s tests -v
 Ingest the local repository:
 
 ```bash
-python -m code_rag.main ingest .
+crag ingest .
 ```
 
 Ask a question:
 
 ```bash
-python -m code_rag.main ask "How is ingestion implemented?"
+crag ask "How is ingestion implemented?"
 ```
 
 ### Suggested development flow

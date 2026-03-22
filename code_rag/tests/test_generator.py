@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import unittest
 from unittest.mock import patch
 
-from code_rag.code_rag.models import CodeChunk
-from code_rag.code_rag.retriever.generator import build_prompt, generate_answer
+DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
+
+if DEPS_AVAILABLE:
+    from code_rag.code_rag.models import CodeChunk
+    from code_rag.code_rag.retriever.generator import build_prompt, generate_answer
 
 
+@unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
 class GeneratorTest(unittest.TestCase):
     def test_build_prompt_includes_query_and_chunk_metadata(self) -> None:
         chunk = CodeChunk(
