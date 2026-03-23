@@ -359,6 +359,7 @@ Preferred installed entry point:
 
 ```bash
 crag ask "Where is the CLI entry point defined?"
+crag ask "Where is the CLI entry point defined?" --directory .
 ```
 
 Module form also works:
@@ -371,6 +372,7 @@ You can also override retrieval depth:
 
 ```bash
 crag ask "How does ingestion work?" --top-k 8
+crag ask "How does ingestion work?" --all-repos
 ```
 
 Expected behavior:
@@ -402,6 +404,13 @@ If you later change the codebase significantly, re-run ingestion to refresh the 
 ---
 
 ## How ingestion works
+
+### Repository scoping and re-ingestion behavior
+
+`code-rag` now scopes indexed chunks by repository root. On every `crag ingest`, the tool deletes the previously indexed chunks for that repository and replaces them with the new chunk set. This prevents deleted files or prior versions of the same repository from leaking into later answers.
+
+By default, `crag ask` also searches only within the selected repository directory. If you intentionally want to search across every ingested repository in the local database, use the `--all-repos` flag.
+
 
 When you run:
 

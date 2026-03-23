@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from ..config import default_top_k
-from ..indexer.db import get_collection
+from ..indexer.db import get_collection, normalize_repo_root
 from ..models import CodeChunk
 
 
-def search_code_chunks(query: str, top_k: int | None = None) -> list[CodeChunk]:
+def search_code_chunks(
+    query: str,
+    top_k: int | None = None,
+    repo_root: str | Path | None = None,
+) -> list[CodeChunk]:
     """Search the local vector store for code chunks relevant to a query."""
     collection = get_collection()
     limit = top_k or default_top_k()
-    results = collection.query(query_texts=[query], n_results=limit)
+    query_kwargs = {"query_texts": [query], "n_results": limit}
+    if repo_root is not None:
+        query_kwargs["where"] = {"repo_root": normalize_repo_root(repo_root)}
+    results = collection.query(**query_kwargs)
 
     metadatas = results.get("metadatas", [[]])
     documents = results.get("documents", [[]])

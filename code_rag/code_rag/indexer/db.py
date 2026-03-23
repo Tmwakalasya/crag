@@ -6,6 +6,7 @@ import hashlib
 import importlib
 import math
 import re
+from pathlib import Path
 
 from ..config import collection_name, db_path
 from ..models import CodeChunk
@@ -51,6 +52,11 @@ def get_collection(client=None):
     )
 
 
+def normalize_repo_root(repo_root: str | Path) -> str:
+    """Normalize a repository root for storage and filtering."""
+    return str(Path(repo_root).expanduser().resolve())
+
+
 def chunk_id(chunk: CodeChunk) -> str:
     """Build a stable identifier for a code chunk."""
     raw_identifier = (
@@ -59,9 +65,10 @@ def chunk_id(chunk: CodeChunk) -> str:
     return hashlib.sha1(raw_identifier.encode("utf-8")).hexdigest()
 
 
-def chunk_to_metadata(chunk: CodeChunk) -> dict[str, str | int]:
+def chunk_to_metadata(chunk: CodeChunk, repo_root: str | Path) -> dict[str, str | int]:
     """Convert a code chunk into ChromaDB metadata."""
     metadata: dict[str, str | int] = {
+        "repo_root": normalize_repo_root(repo_root),
         "file_path": chunk.file_path,
         "language": chunk.language,
         "chunk_type": chunk.chunk_type,
@@ -74,16 +81,19 @@ def chunk_to_metadata(chunk: CodeChunk) -> dict[str, str | int]:
     return metadata
 
 
-def ingest_chunks(chunks: list[CodeChunk]) -> int:
-    """Persist code chunks into the local ChromaDB collection."""
+def ingest_chunks(chunks: list[CodeChunk], repo_root: str | Path) -> int:
+    """Replace the indexed chunks for a repository in the local ChromaDB collection."""
+    collection = get_collection()
+    repo_scope = normalize_repo_root(repo_root)
+    collection.delete(where={"repo_root": repo_scope})
+
     if not chunks:
         return 0
 
-    collection = get_collection()
     payload = {
         "ids": [chunk_id(chunk) for chunk in chunks],
         "documents": [chunk.source_code for chunk in chunks],
-        "metadatas": [chunk_to_metadata(chunk) for chunk in chunks],
+        "metadatas": [chunk_to_metadata(chunk, repo_root=repo_scope) for chunk in chunks],
     }
 
     collection.upsert(**payload)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+from pathlib import Path
 from textwrap import dedent
 
 from ..config import (
@@ -23,9 +24,13 @@ _SYSTEM_PROMPT = (
 )
 
 
-def answer_query(query: str, top_k: int | None = None) -> QueryResult:
+def answer_query(
+    query: str,
+    top_k: int | None = None,
+    repo_root: str | Path | None = None,
+) -> QueryResult:
     """Retrieve relevant chunks and generate a grounded answer."""
-    chunks = search_code_chunks(query, top_k=top_k)
+    chunks = search_code_chunks(query, top_k=top_k, repo_root=repo_root)
     return generate_answer(query, chunks)
 
 
@@ -33,7 +38,7 @@ def generate_answer(query: str, chunks: list[CodeChunk]) -> QueryResult:
     """Generate an answer for a query using retrieved chunks."""
     if not chunks:
         return QueryResult(
-            answer="No indexed code chunks matched the query. Run `crag ingest` first or try a broader question.",
+            answer="No indexed code chunks matched the query for the selected repository. Run `crag ingest` again or broaden the question.",
             referenced_chunks=[],
         )
 

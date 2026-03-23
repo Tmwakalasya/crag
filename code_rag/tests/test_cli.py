@@ -41,12 +41,13 @@ class CliTest(unittest.TestCase):
             with patch("code_rag.code_rag.indexer.crawler.iter_source_files", return_value=[target_dir / "example.py"]), patch(
                 "code_rag.code_rag.indexer.crawler.crawl_code_chunks",
                 return_value=[chunk],
-            ), patch("code_rag.code_rag.indexer.db.ingest_chunks", return_value=1):
+            ), patch("code_rag.code_rag.indexer.db.ingest_chunks", return_value=1) as ingest_mock:
                 result = self.runner.invoke(app, ["ingest", str(target_dir)])
 
         self.assertEqual(result.exit_code, 0)
         self.assertIn("Chunks indexed", result.stdout)
-        self.assertIn("1", result.stdout)
+        self.assertIn("Search scope", result.stdout)
+        ingest_mock.assert_called_once_with([chunk], repo_root=target_dir.resolve())
 
     def test_ask_command_prints_answer_and_references(self) -> None:
         chunk = CodeChunk(
@@ -60,16 +61,23 @@ class CliTest(unittest.TestCase):
         )
         query_result = QueryResult(answer="demo lives in src/example.py", referenced_chunks=[chunk])
 
-        with patch(
-            "code_rag.code_rag.retriever.generator.answer_query",
-            return_value=query_result,
-        ):
-            result = self.runner.invoke(app, ["ask", "Where is demo?"])
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir)
+            with patch(
+                "code_rag.code_rag.retriever.generator.answer_query",
+                return_value=query_result,
+            ) as answer_query_mock:
+                result = self.runner.invoke(app, ["ask", "Where is demo?", "--directory", str(target_dir)])
 
         self.assertEqual(result.exit_code, 0)
         self.assertIn("demo lives in src/example.py", result.stdout)
         self.assertIn("src/example.py", result.stdout)
         self.assertIn("10-12", result.stdout)
+        answer_query_mock.assert_called_once_with(
+            "Where is demo?",
+            top_k=5,
+            repo_root=target_dir.resolve(),
+        )
 
 
 if __name__ == "__main__":

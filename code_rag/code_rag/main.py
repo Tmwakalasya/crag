@@ -36,23 +36,31 @@ def ingest(directory_path: Path) -> None:
 
     source_files = iter_source_files(resolved_path)
     chunks = crawl_code_chunks(resolved_path)
-    stored_chunks = ingest_chunks(chunks)
+    stored_chunks = ingest_chunks(chunks, repo_root=resolved_path)
 
     summary = Table.grid(padding=(0, 2))
     summary.add_row("Repository", str(resolved_path))
     summary.add_row("Database path", str(db_path()))
     summary.add_row("Source files", str(len(source_files)))
     summary.add_row("Chunks indexed", str(stored_chunks))
+    summary.add_row("Search scope", str(resolved_path))
 
     console.print(Panel.fit(summary, title="crag ingest"))
 
 
 @app.command()
-def ask(query_string: str, top_k: int = typer.Option(default_top_k(), min=1)) -> None:
+def ask(
+    query_string: str,
+    top_k: int = typer.Option(default_top_k(), min=1),
+    directory: Path = typer.Option(Path("."), "--directory", "-d"),
+    all_repos: bool = typer.Option(False, help="Search across all previously ingested repositories."),
+) -> None:
     """Ask an architecture question grounded in indexed code chunks."""
     from .retriever.generator import answer_query
 
-    result = answer_query(query_string, top_k=top_k)
+    resolved_directory = directory.expanduser().resolve()
+    repo_root = None if all_repos else resolved_directory
+    result = answer_query(query_string, top_k=top_k, repo_root=repo_root)
 
     references = Table(title="Referenced chunks")
     references.add_column("File")
@@ -68,7 +76,9 @@ def ask(query_string: str, top_k: int = typer.Option(default_top_k(), min=1)) ->
             chunk.name,
         )
 
-    console.print(Panel.fit(result.answer, title="crag ask"))
+    title = "crag ask"
+    subtitle = "Search scope: all repositories" if all_repos else f"Search scope: {resolved_directory}"
+    console.print(Panel.fit(f"{result.answer}\n\n{subtitle}", title=title))
     if result.referenced_chunks:
         console.print(references)
 
