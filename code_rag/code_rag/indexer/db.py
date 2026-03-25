@@ -81,6 +81,25 @@ def chunk_to_metadata(chunk: CodeChunk, repo_root: str | Path) -> dict[str, str 
     return metadata
 
 
+def _build_document_text(chunk: CodeChunk) -> str:
+    """Build enriched document text that includes metadata for better search.
+
+    The hash-based embeddings match on token overlap, so including the file
+    name, chunk name, type, and docstring in the indexed text dramatically
+    improves retrieval quality.
+    """
+    file_name = Path(chunk.file_path).name
+    header_parts = [
+        f"file: {file_name}",
+        f"{chunk.chunk_type}: {chunk.name}",
+        f"language: {chunk.language}",
+    ]
+    if chunk.docstring:
+        header_parts.append(f"docstring: {chunk.docstring}")
+    header = "\n".join(header_parts)
+    return f"{header}\n\n{chunk.source_code}"
+
+
 def ingest_chunks(chunks: list[CodeChunk], repo_root: str | Path) -> int:
     """Replace the indexed chunks for a repository in the local ChromaDB collection."""
     collection = get_collection()
@@ -92,7 +111,7 @@ def ingest_chunks(chunks: list[CodeChunk], repo_root: str | Path) -> int:
 
     payload = {
         "ids": [chunk_id(chunk) for chunk in chunks],
-        "documents": [chunk.source_code for chunk in chunks],
+        "documents": [_build_document_text(chunk) for chunk in chunks],
         "metadatas": [chunk_to_metadata(chunk, repo_root=repo_scope) for chunk in chunks],
     }
 

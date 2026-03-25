@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+
 DEFAULT_DB_DIRNAME = ".code_rag_db"
 DEFAULT_COLLECTION_NAME = "code_chunks"
 DEFAULT_TOP_K = 5

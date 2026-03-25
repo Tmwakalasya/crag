@@ -17,6 +17,10 @@ def search_code_chunks(
     """Search the local vector store for code chunks relevant to a query."""
     collection = get_collection()
     limit = top_k or default_top_k()
+    count = collection.count()
+    if count == 0:
+        return []
+    limit = min(limit, count)
     query_kwargs = {"query_texts": [query], "n_results": limit}
     if repo_root is not None:
         query_kwargs["where"] = {"repo_root": normalize_repo_root(repo_root)}
