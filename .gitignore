@@ -3,3 +3,8 @@ __pycache__/
 *.pyo
 
 code_rag/.venv/
+.venv/
+.env
+.idea/
+.claude/
+*.egg-info/
