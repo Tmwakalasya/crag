@@ -9,15 +9,21 @@ DEFAULT_DB_DIRNAME = ".code_rag_db"
 DEFAULT_COLLECTION_NAME = "code_chunks"
 DEFAULT_TOP_K = 5
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_OLLAMA_MODEL = "qwen2.5-coder"
 DEFAULT_OLLAMA_HOST = "http://localhost:11434"
 ENV_DB_PATH = "CODE_RAG_DB_PATH"
 ENV_COLLECTION_NAME = "CODE_RAG_COLLECTION"
 ENV_TOP_K = "CODE_RAG_TOP_K"
 ENV_GEMINI_MODEL = "CODE_RAG_GEMINI_MODEL"
+ENV_OPENAI_MODEL = "CODE_RAG_OPENAI_MODEL"
+ENV_ANTHROPIC_MODEL = "CODE_RAG_ANTHROPIC_MODEL"
 ENV_OLLAMA_MODEL = "CODE_RAG_OLLAMA_MODEL"
 ENV_OLLAMA_HOST = "OLLAMA_HOST"
 ENV_GOOGLE_API_KEY = "GOOGLE_API_KEY"
+ENV_OPENAI_API_KEY = "OPENAI_API_KEY"
+ENV_ANTHROPIC_API_KEY = "ANTHROPIC_API_KEY"
 
 
 def default_db_path() -> Path:
@@ -47,6 +53,16 @@ def gemini_model() -> str:
     return os.getenv(ENV_GEMINI_MODEL, DEFAULT_GEMINI_MODEL)
 
 
+def openai_model() -> str:
+    """Return the configured OpenAI model name."""
+    return os.getenv(ENV_OPENAI_MODEL, DEFAULT_OPENAI_MODEL)
+
+
+def anthropic_model() -> str:
+    """Return the configured Anthropic model name."""
+    return os.getenv(ENV_ANTHROPIC_MODEL, DEFAULT_ANTHROPIC_MODEL)
+
+
 def ollama_model() -> str:
     """Return the configured Ollama model name."""
     return os.getenv(ENV_OLLAMA_MODEL, DEFAULT_OLLAMA_MODEL)
@@ -60,3 +76,13 @@ def ollama_host() -> str:
 def google_api_key() -> str | None:
     """Return the configured Google API key if present."""
     return os.getenv(ENV_GOOGLE_API_KEY)
+
+
+def openai_api_key() -> str | None:
+    """Return the configured OpenAI API key if present."""
+    return os.getenv(ENV_OPENAI_API_KEY)
+
+
+def anthropic_api_key() -> str | None:
+    """Return the configured Anthropic API key if present."""
+    return os.getenv(ENV_ANTHROPIC_API_KEY)
