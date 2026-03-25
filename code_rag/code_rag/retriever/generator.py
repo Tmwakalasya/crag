@@ -10,10 +10,14 @@ from textwrap import dedent
 from ..config import (
     ENV_OLLAMA_HOST,
     ENV_OLLAMA_MODEL,
+    anthropic_api_key,
+    anthropic_model,
     gemini_model,
     google_api_key,
     ollama_host,
     ollama_model,
+    openai_api_key,
+    openai_model,
 )
 from ..models import CodeChunk, QueryResult
 from .search import search_code_chunks
@@ -43,9 +47,12 @@ def generate_answer(query: str, chunks: list[CodeChunk]) -> QueryResult:
         )
 
     prompt = build_prompt(query, chunks)
-    answer = _generate_with_gemini(prompt) or _generate_with_ollama(prompt) or _fallback_answer(
-        query,
-        chunks,
+    answer = (
+        _generate_with_gemini(prompt)
+        or _generate_with_openai(prompt)
+        or _generate_with_anthropic(prompt)
+        or _generate_with_ollama(prompt)
+        or _fallback_answer(query, chunks)
     )
     return QueryResult(answer=answer, referenced_chunks=chunks)
 
@@ -85,6 +92,42 @@ def _generate_with_gemini(prompt: str) -> str | None:
     client = genai.Client(api_key=api_key)
     response = client.models.generate_content(model=gemini_model(), contents=prompt)
     return getattr(response, "text", None)
+
+
+def _generate_with_openai(prompt: str) -> str | None:
+    api_key = openai_api_key()
+    if not api_key or importlib.util.find_spec("openai") is None:
+        return None
+
+    openai = importlib.import_module("openai")
+    client = openai.OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model=openai_model(),
+        messages=[
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+    )
+    choice = response.choices[0] if response.choices else None
+    return choice.message.content if choice else None
+
+
+def _generate_with_anthropic(prompt: str) -> str | None:
+    api_key = anthropic_api_key()
+    if not api_key or importlib.util.find_spec("anthropic") is None:
+        return None
+
+    anthropic = importlib.import_module("anthropic")
+    client = anthropic.Anthropic(api_key=api_key)
+    response = client.messages.create(
+        model=anthropic_model(),
+        max_tokens=4096,
+        system=_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    if response.content:
+        return response.content[0].text
+    return None
 
 
 def _generate_with_ollama(prompt: str) -> str | None:
