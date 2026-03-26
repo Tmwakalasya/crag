@@ -90,7 +90,10 @@ def _generate_with_gemini(prompt: str) -> str | None:
 
     genai = importlib.import_module("google.genai")
     client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(model=gemini_model(), contents=prompt)
+    try:
+        response = client.models.generate_content(model=gemini_model(), contents=prompt)
+    except Exception:
+        return None
     return getattr(response, "text", None)
 
 
@@ -101,13 +104,16 @@ def _generate_with_openai(prompt: str) -> str | None:
 
     openai = importlib.import_module("openai")
     client = openai.OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=openai_model(),
-        messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
-    )
+    try:
+        response = client.chat.completions.create(
+            model=openai_model(),
+            messages=[
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+        )
+    except Exception:
+        return None
     choice = response.choices[0] if response.choices else None
     return choice.message.content if choice else None
 
@@ -119,12 +125,15 @@ def _generate_with_anthropic(prompt: str) -> str | None:
 
     anthropic = importlib.import_module("anthropic")
     client = anthropic.Anthropic(api_key=api_key)
-    response = client.messages.create(
-        model=anthropic_model(),
-        max_tokens=4096,
-        system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    try:
+        response = client.messages.create(
+            model=anthropic_model(),
+            max_tokens=4096,
+            system=_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception:
+        return None
     if response.content:
         return response.content[0].text
     return None
