@@ -10,14 +10,14 @@ from unittest.mock import patch
 DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
 
 if DEPS_AVAILABLE:
-    from code_rag.code_rag.indexer.db import (
+    from code_rag.indexer.db import (
         LocalHashEmbeddingFunction,
         chunk_id,
         chunk_to_metadata,
         ingest_chunks,
         normalize_repo_root,
     )
-    from code_rag.code_rag.models import CodeChunk
+    from code_rag.models import CodeChunk
 
 
 @unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
@@ -74,7 +74,7 @@ class DatabaseHelperTest(unittest.TestCase):
                 self.upsert_payload = payload
 
         collection = FakeCollection()
-        with patch("code_rag.code_rag.indexer.db.get_collection", return_value=collection):
+        with patch("code_rag.indexer.db.get_collection", return_value=collection):
             count = ingest_chunks([chunk], repo_root="/tmp/repo")
 
         self.assertEqual(count, 1)

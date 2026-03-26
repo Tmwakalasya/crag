@@ -10,7 +10,7 @@ from pathlib import Path
 DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
 
 if DEPS_AVAILABLE:
-    from code_rag.code_rag.indexer.crawler import iter_source_files
+    from code_rag.indexer.crawler import iter_source_files
 
 
 @unittest.skipUnless(DEPS_AVAILABLE, "pydantic is not installed")
@@ -29,7 +29,7 @@ class CrawlerTest(unittest.TestCase):
 
             files = iter_source_files(root)
 
-        self.assertEqual(files, [root / "pkg" / "keep.py"])
+        self.assertEqual(files, [root.resolve() / "pkg" / "keep.py"])
 
 
 if __name__ == "__main__":

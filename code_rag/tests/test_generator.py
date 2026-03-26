@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 DEPS_AVAILABLE = importlib.util.find_spec("pydantic") is not None
 
 if DEPS_AVAILABLE:
-    from code_rag.code_rag.models import CodeChunk
-    from code_rag.code_rag.retriever.generator import (
+    from code_rag.models import CodeChunk
+    from code_rag.retriever.generator import (
         _generate_with_anthropic,
         _generate_with_openai,
         build_prompt,

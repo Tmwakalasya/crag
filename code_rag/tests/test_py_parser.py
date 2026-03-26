@@ -11,7 +11,7 @@ PARSER_DEPS_AVAILABLE = all(
 )
 
 if PARSER_DEPS_AVAILABLE:
-    from code_rag.code_rag.parser.engine import parse_source
+    from code_rag.parser.engine import parse_source
 
 
 @unittest.skipUnless(PARSER_DEPS_AVAILABLE, "parser dependencies are not installed")

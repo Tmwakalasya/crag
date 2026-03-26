@@ -16,8 +16,8 @@ DEPS_AVAILABLE = (
 if DEPS_AVAILABLE:
     from typer.testing import CliRunner
 
-    from code_rag.code_rag.main import app
-    from code_rag.code_rag.models import CodeChunk, QueryResult
+    from code_rag.main import app
+    from code_rag.models import CodeChunk, QueryResult
 
 
 @unittest.skipUnless(DEPS_AVAILABLE, "pydantic and typer are not installed")
@@ -38,10 +38,10 @@ class CliTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             target_dir = Path(temp_dir)
-            with patch("code_rag.code_rag.indexer.crawler.iter_source_files", return_value=[target_dir / "example.py"]), patch(
-                "code_rag.code_rag.indexer.crawler.crawl_code_chunks",
+            with patch("code_rag.indexer.crawler.iter_source_files", return_value=[target_dir / "example.py"]), patch(
+                "code_rag.indexer.crawler.crawl_code_chunks",
                 return_value=[chunk],
-            ), patch("code_rag.code_rag.indexer.db.ingest_chunks", return_value=1) as ingest_mock:
+            ), patch("code_rag.indexer.db.ingest_chunks", return_value=1) as ingest_mock:
                 result = self.runner.invoke(app, ["ingest", str(target_dir)])
 
         self.assertEqual(result.exit_code, 0)
@@ -64,7 +64,7 @@ class CliTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             target_dir = Path(temp_dir)
             with patch(
-                "code_rag.code_rag.retriever.generator.answer_query",
+                "code_rag.retriever.generator.answer_query",
                 return_value=query_result,
             ) as answer_query_mock:
                 result = self.runner.invoke(app, ["ask", "Where is demo?", "--directory", str(target_dir)])
