@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import math
+import os
 import re
 from pathlib import Path
 
@@ -37,6 +38,7 @@ class LocalHashEmbeddingFunction:
 
 def get_client():
     """Create a persistent local ChromaDB client."""
+    os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
     chromadb = importlib.import_module("chromadb")
     storage_path = db_path()
     storage_path.mkdir(parents=True, exist_ok=True)

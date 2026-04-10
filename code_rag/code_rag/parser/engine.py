@@ -6,10 +6,12 @@ from pathlib import Path
 
 from ..models import CodeChunk
 
+from .go_parser import parse_go_source
 from .py_parser import parse_python_source
 
 SUPPORTED_EXTENSIONS = {
     ".py": "python",
+    ".go": "go",
 }
 
 
@@ -27,6 +29,8 @@ def parse_source(file_path: str | Path, source_code: str) -> list[CodeChunk]:
     language = detect_language(file_path)
     if language == "python":
         return parse_python_source(str(file_path), source_code)
+    if language == "go":
+        return parse_go_source(str(file_path), source_code)
     raise ValueError(f"No parser implementation is registered for language: {language}")
 
 
